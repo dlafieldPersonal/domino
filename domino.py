@@ -1,6 +1,5 @@
 import pygame
 import random
-import collections 
 
 gamePoint = 50
 dominosPerPlayer = 7
@@ -9,11 +8,6 @@ dominosPerPlayer = 7
 player pseudo-class
 	int score
 	domino list doms
-"""
-
-"""
-board pseudo-class
-	int [list] playedDominoes
 """
 
 def shuffleDominos():
@@ -49,14 +43,6 @@ def hasDouble(player):
 			return True
 	return False
 
-def highestDouble(player):
-	#assume player has double
-	(s, d) = player
-	for dd in d:
-		(a, b) = dd
-		if a == b:
-			return a
-	
 def addDominoToPlayer(player, domino):
 	#put domino at end
 	player[1].append(domino)
@@ -77,72 +63,35 @@ def addDominoToPlayer(player, domino):
 		player[1][index - 1] = tempDom
 		index -= 1
 	
-def addDominoToBoard(board, domino, direction=0):
-	#direction = 0 -- put domino on left.  = 1-- put domino on right
+def removeDominoFromPlayer(player, index):
+	retDom = player[1][index]
+	del player[1][index]
+	return retDom
 	
-	if len(board) == 0:
-		board.append(domino[0])
-		board.append(domino[1])
-		return board
-		
-	if direction == 0:
-		board.appendleft(board[0])
-		if domino[0] == board[0]:
-			board.appendleft(domino[1])
-		else:
-			board.appendleft(domino[0])
+def moveIsLegal(player, board, dIndex, side):
+	dom = player[1][dIndex]
+	if side == 0:
+		if dom[0] == board[0] or dom[1] == board[0]:
+			return True
+		else
+			return False
 	else:
-		board.appendright(board[-1])
-		if domino[0] == board[-1]:
-			board.append(domino[1])
-		else:
-			board.append(domino[0])
-	return board
-	
-def printBoard(board):
-	if len(board) == 0:
-		print "[empty]"
-	else:
-		for i in range(len(board) / 2):
-			print "[" + `board[i * 2]` + `board[i * 2 + 1]` + "]",
-		print " "
-
+		if dom[0] == board[-1] or dom[1] == board[-1]:
+			return True
+		else
+			return False
+			
 dominos = shuffleDominos()
 
 players = [(0, []), (0, [])]
 
-board = (collections.deque([]))
-
-#deal dominos for first hand
+#deal the dominoes
 while not hasDouble(players[0]) and not hasDouble(players[1]):
 	print "{\n" + `players` + "\n}\n"
 	players = [(0, []), (0, [])]
 	for i in range(2 * dominosPerPlayer):
 		addDominoToPlayer(players[i / dominosPerPlayer], dominos[i])
 	dominos = shuffleDominos()
-	
-#calculate first player
-currentTurnIndex = 0
-if not hasDouble(players[0]):
-	currentTurnIndex = 1
-else:
-	if not hasDouble(players[1]):
-		currentTurnIndex = 0
-	else:
-		if highestDouble(players[0]) > highestDouble(players[1]):
-			currentTurnIndex = 0
-		else:
-			currentTurnIndex = 1
-			
-nextFirst = 1 - currentTurnIndex
-
-#automatically make first move
-dIndex = 0
-#/***/
-#swap players turn
-#while not domino and not lock, if can play, then play, swap turn
-	
-	
 	
 #print dominos
 for player in players:
