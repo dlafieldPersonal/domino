@@ -77,13 +77,38 @@ def removeDominoFromPlayer(player, index):
 	return retDom
 	
 def addDominoToBoard(player, dIndex, board, side):
+	print "dIndex = " + `dIndex`
+	print "player[1] = " + `player[1]`
 	domToAdd = player[1][dIndex]
-	if side == 1:
-		print "write code for adding to right side"
+	if len(board) > 0:
+		if side == 1:
+			if board[-1] == domToAdd[0]:
+				board.append(domToAdd[0])
+				board.append(domToAdd[1])
+			else:
+				board.append(domToAdd[1])
+				board.append(domToAdd[0])
+		else:
+			if board[0] == domToAdd[0]:
+				board.insert(0, domToAdd[0])
+				board.insert(0, domToAdd[1])
+			else:
+				board.insert(0, domToAdd[1])
+				board.insert(0, domToAdd[0])
 	else:
-		print "write code for adding to left side"
+		board.append(domToAdd[0])
+		board.append(domToAdd[1])
 	removeDominoFromPlayer(player, dIndex)
 	
+def printBoard(board):
+	if len(board) == 0:
+		print "{nothing is on the board}"
+	else:
+		for i in range(len(board)):
+			if i % 2 == 0:
+				print "[" + `board[i]` + `board[i+1]` + "]",
+		print " "
+				
 def moveIsLegal(player, board, dIndex, side):
 	#player = the player whose turn it is
 	#board = list of dominoes on the board
@@ -113,25 +138,34 @@ def canMakeAnyMove(player, board):
 				return True
 	return False
 
-def playerMakeMove(player, board):
-	if not canMakeAnyMove:
+def playerMakeMove(player, board, opponentD):
+	if not canMakeAnyMove(player, board):
 		print "no move can be made."
 	else:
+		print "opponent has " + `opponentD` + " dominoes"
+		print "board:"
+		printBoard(board)
+		print "Dominoes:"
+		dIndex = 0
+		for d in player[1]:
+			print `dIndex` + " : " + `d`
+			dIndex += 1
 		validDominoes = []
 		for dIndex in range(len(player[1])):
 			for side in range(1):
 				if moveIsLegal(player, board, dIndex, side):
 					validDominoes.append(dIndex)
-					print "domino " + `dIndex`,
+					print "domino " + `dIndex` + " ",
 					if side == 0:
 						print "left"
 					else:
 						print "right"
 		while True:
-			domSelected = raw_input("enter choice:")
+			domSelected = int(raw_input("enter choice: "))
 			if domSelected in validDominoes:
 				break
 			print "Not a valid domino..."
+			doug = 1/0
 		
 		sideSelected = -1
 		if not moveIsLegal(player, board, domSelected, 0):
@@ -139,25 +173,36 @@ def playerMakeMove(player, board):
 		if not moveIsLegal(player, board, domSelected, 1):
 			sideSelected = 0
 		while sideSelected == -1:
-			userSide = raw_input("Choose left or right:")
+			userSide = raw_input("Choose left or right: ")
 			if userSide == "left":
 				sideSelected = 0
 			if userSide == "right":
 				sideSelected = 1
 			if sideSelected == -1:
 				print "\"" + userSide + "\" is not a valid choice"
-		#here
-			
-		print "not done"
+		addDominoToBoard(player, domSelected, board, sideSelected)
+		removeDominoFromPlayer(player, domSelected)
 	
-def makeMove(player, board, isFirstMove, method):
+def makeMove(player, board, isFirstMove, method, opponentD):
 	#method: algorithm to make move
 	print "not done"
+	if isFirstMove:
+		print "player = " + `player`
+		#print "len player[1] = " + `len(player[1])`
+		for dIndex in range(len(player[1])):
+			d = player[1][dIndex]
+			if d[0] == d[1]:
+				addDominoToBoard(player, dIndex, board, 1)
+				break
+	else:
+		method(player, board, opponentD)
 	
 			
 dominos = shuffleDominos()
 
 players = [(0, []), (0, [])]
+
+board = []
 
 if True: #play game
 	
@@ -187,6 +232,13 @@ if True: #play game
 		
 		while not isDomino and not isLocked:
 			
+			makeMove(players[turnIndex], board, True, playerMakeMove, len(players[1 - turnIndex][1]))
+			turnIndex = 1 - turnIndex
+			makeMove(players[turnIndex], board, False, playerMakeMove, len(players[1 - turnIndex][1]))
+			turnIndex = 1 - turnIndex
+			makeMove(players[turnIndex], board, False, playerMakeMove, len(players[1 - turnIndex][1]))
+			turnIndex = 1 - turnIndex
+			makeMove(players[turnIndex], board, False, playerMakeMove, len(players[1 - turnIndex][1]))
 			break
 		#if nobody has won, deal again, set turn, and flip nextFirstTurn
 			
