@@ -114,16 +114,24 @@ def moveIsLegal(player, board, dIndex, side):
 	#board = list of dominoes on the board
 	#dIndex = index of domino played
 	#side = which side the domino is plaed on
-	
+	"""
+	print "within moveIsLegal:"
+	print "player = " + `player`
+	print "board = " + `board`
+	print "dIndex = " + `dIndex`
+	print "side = " + `side`
+	"""
 	if len(board) == 0:
 		return True
 	dom = player[1][dIndex]
+	#print "dom = " + `dom`
 	if side == 0:
 		if dom[0] == board[0] or dom[1] == board[0]:
 			return True
 		else:
 			return False
 	else:
+		#print "side of board to check is " + `board[-1]`
 		if dom[0] == board[-1] or dom[1] == board[-1]:
 			return True
 		else:
@@ -133,7 +141,7 @@ def canMakeAnyMove(player, board):
 	if len(board) == 0:
 		return True
 	for dIndex in range(len(player[1])):
-		for side in range(1):
+		for side in range(2):
 			if moveIsLegal(player, board, dIndex, side):
 				return True
 	return False
@@ -152,7 +160,9 @@ def playerMakeMove(player, board, opponentD):
 			dIndex += 1
 		validDominoes = []
 		for dIndex in range(len(player[1])):
-			for side in range(1):
+			#print "checking domino " + `dIndex` + " which is " + `player[1][dIndex]`
+			for side in range(2):
+				#print "checking side" + `side`
 				if moveIsLegal(player, board, dIndex, side):
 					validDominoes.append(dIndex)
 					print "domino " + `dIndex` + " ",
@@ -165,7 +175,7 @@ def playerMakeMove(player, board, opponentD):
 			if domSelected in validDominoes:
 				break
 			print "Not a valid domino..."
-			doug = 1/0
+			#doug = 1/0
 		
 		sideSelected = -1
 		if not moveIsLegal(player, board, domSelected, 0):
@@ -181,11 +191,14 @@ def playerMakeMove(player, board, opponentD):
 			if sideSelected == -1:
 				print "\"" + userSide + "\" is not a valid choice"
 		addDominoToBoard(player, domSelected, board, sideSelected)
-		removeDominoFromPlayer(player, domSelected)
+
+def highestPipMove(player, board, opponentD):
+	print "here"
+	#automatically make move that removes the highest number of pips
 	
 def makeMove(player, board, isFirstMove, method, opponentD):
 	#method: algorithm to make move
-	print "not done"
+	boardBefore = len(board)
 	if isFirstMove:
 		print "player = " + `player`
 		#print "len player[1] = " + `len(player[1])`
@@ -196,29 +209,45 @@ def makeMove(player, board, isFirstMove, method, opponentD):
 				break
 	else:
 		method(player, board, opponentD)
-	
+	boardAfter = len(board)
+	return boardBefore == boardAfter
 			
 dominos = shuffleDominos()
+#dominos = [(3, 3), (1, 0), (5, 4), (6, 6), (1, 1), (5, 0), (5, 3), (5, 2), (4, 0), (3, 2), (2, 2), (4, 3), (4, 1), (3, 1), (6, 1), (4, 2), (5, 1), (5, 5), (2, 0), (6, 5), (6, 2), (6, 4), (4, 4), (6, 0), (0, 0), (3, 0), (6, 3), (2, 1)]
 
+
+print "Dominoes = " + `dominos`
 players = [(0, []), (0, [])]
 
 board = []
 
-if True: #play game
+aWinnerIsFound = False
+isFirstHand = True
+
+#if True: #play game
+while not aWinnerIsFound: #play game
+	
+	dominos = shuffleDominos()
+	players = [(players[0][0], []), (players[1][0], [])]
 	
 	#deal the dominoes
 	while not hasDouble(players[0]) and not hasDouble(players[1]):
 		print "{\n" + `players` + "\n}\n"
-		players = [(0, []), (0, [])]
+		players = [(players[0][0], []), (players[1][0], [])]
 		for i in range(2 * dominosPerPlayer):
 			addDominoToPlayer(players[i / dominosPerPlayer], dominos[i])
 		dominos = shuffleDominos()
-
-	turnIndex = 0
-	if highestDouble(players[1]) > highestDouble(players[0]):
-		turnIndex = 1
+		
+	if isFirstHand:
+		turnIndex = 0
+		if highestDouble(players[1]) > highestDouble(players[0]):
+			turnIndex = 1
+	else:
+		turnIndex = nextFirstTurn
 
 	nextFirstTurn = 1 - turnIndex
+	
+	board = []
 	
 	if True: #play hand
 
@@ -230,18 +259,41 @@ if True: #play game
 		isDomino = False
 		isLocked = False
 		
+		prevPass = makeMove(players[turnIndex], board, isFirstHand, playerMakeMove, len(players[1 - turnIndex][1]))
+		isFirstHand = False
 		while not isDomino and not isLocked:
 			
-			makeMove(players[turnIndex], board, True, playerMakeMove, len(players[1 - turnIndex][1]))
+			print "Board for testing: " + `board`
+			for player in players:
+				print `player` + "   " + `countPips(player)`
 			turnIndex = 1 - turnIndex
-			makeMove(players[turnIndex], board, False, playerMakeMove, len(players[1 - turnIndex][1]))
-			turnIndex = 1 - turnIndex
-			makeMove(players[turnIndex], board, False, playerMakeMove, len(players[1 - turnIndex][1]))
-			turnIndex = 1 - turnIndex
-			makeMove(players[turnIndex], board, False, playerMakeMove, len(players[1 - turnIndex][1]))
-			break
+			curPass = makeMove(players[turnIndex], board, False, playerMakeMove, len(players[1 - turnIndex][1]))
+			if prevPass and curPass:
+				isLocked = True
+				print "Locked"
+			prevPass = curPass
+			if len(players[turnIndex][1]) == 0:
+				isDomino = True
+				print "Domino"
+
 		#if nobody has won, deal again, set turn, and flip nextFirstTurn
-			
+	
+	player0pips = countPips(players[0])		
+	player1pips = countPips(players[1])
+	if player0pips < player1pips:
+		(p, c) = players[0]
+		players[0] = (p + player1pips - player0pips, c)
+		if p + player1pips - player0pips >= gamePoint:
+			aWinnerIsFound = True
+	else:
+		(p, c) = players[1]
+		players[1] = (p + player0pips - player1pips, c)
+		if p + player0pips - player1pips >= gamePoint:
+			aWinnerIsFound = True
+	
+	print "----------------"
 		
+	for player in players:
+		print `player` + "   " + `countPips(player)`
 
 print "Done."
