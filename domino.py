@@ -195,6 +195,15 @@ def playerMakeMove(player, board, opponentD):
 def highestPipMove(player, board, opponentD):
 	print "here"
 	#automatically make move that removes the highest number of pips
+
+def lowestPipMove(player, board, opponentD):
+	print "here"
+	
+def highestDoubleMove(player, board, opponentD):
+	print "here"
+	
+def lowestDoubleMove(player, board, opponentD):
+	print "here"
 	
 def makeMove(player, board, isFirstMove, method, opponentD):
 	#method: algorithm to make move
