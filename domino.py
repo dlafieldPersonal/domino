@@ -366,8 +366,9 @@ while not aWinnerIsFound: #play game
 			aWinnerIsFound = True
 	
 	print "----------------"
-		
-	for player in players:
-		print `player` + "   " + `countPips(player)`
+	with open("points.txt", "w") as f:	
+		for player in players:
+			print `player` + "   " + `countPips(player)`
+			f.write(`player[0]` + "\n")
 
 print "Done."
