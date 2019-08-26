@@ -1,5 +1,6 @@
 import pygame
 import random
+import sys
 
 gamePoint = 50
 dominosPerPlayer = 7
@@ -193,17 +194,56 @@ def playerMakeMove(player, board, opponentD):
 		addDominoToBoard(player, domSelected, board, sideSelected)
 
 def highestPipMove(player, board, opponentD):
-	print "here"
-	#automatically make move that removes the highest number of pips
+	print "Choosing highest pip domino..."
+	if not canMakeAnyMove(player, board):
+		print "The highest pip computer cannot make a move and is forced to pass"
+	else:
+		highestPip = -1
+		domSelected = -1
+		sideSelected = ""
+		for dIndex in range(len(player[1])):
+			for side in range(2):
+				if moveIsLegal(player, board, dIndex, side):
+					curPips = player[1][dIndex][0] + player[1][dIndex][1]
+					if curPips > highestPip:
+						highestPip = curPips
+						domSelected = dIndex
+						sideSelected = side
+		addDominoToBoard(player, domSelected, board, sideSelected)
 
 def lowestPipMove(player, board, opponentD):
-	print "here"
+	print "Choosing lowest pip domino..."
+	if not canMakeAnyMove(player, board):
+		print "The lowest pip computer cannot make a move and is forced to pass"
+	else:
+		lowestPip = 99
+		domSelected = -1
+		sideSelected = ""
+		for dIndex in range(len(player[1])):
+			for side in range(2):
+				if moveIsLegal(player, board, dIndex, side):
+					curPips = player[1][dIndex][0] + player[1][dIndex][1]
+					if curPips < lowestPip:
+						lowestPip = curPips
+						domSelected = dIndex
+						sideSelected = side
+		addDominoToBoard(player, domSelected, board, sideSelected)
 	
 def highestDoubleMove(player, board, opponentD):
-	print "here"
-	
-def lowestDoubleMove(player, board, opponentD):
-	print "here"
+	print "Choosing highest pip double domino..."
+	if not canMakeAnyMove(player, board):
+		print "The highest pip double computer cannot make a move and is forced to pass"
+	else:
+		highestPip = -1
+		domSelected = -1
+		sideSelected = ""
+		for dIndex in range(len(player[1])):
+			for side in range(2):
+				if moveIsLegal(player, board, dIndex, side):
+					if player[1][dIndex][0] == player[1][dIndex][1]:
+						addDominoToBoard(player, dIndex, board, side)
+						return
+		highestPipMove(player, board, opponentD)
 	
 def makeMove(player, board, isFirstMove, method, opponentD):
 	#method: algorithm to make move
@@ -220,16 +260,34 @@ def makeMove(player, board, isFirstMove, method, opponentD):
 		method(player, board, opponentD)
 	boardAfter = len(board)
 	return boardBefore == boardAfter
-			
+
+models = []
+for sysArg in sys.argv[1:]:
+	print "this argument = " + `sysArg`
+	if sysArg == "high":
+		models.append(highestPipMove)
+	if sysArg == "low":
+		models.append(lowestPipMove)
+	if sysArg == "double":
+		models.append(highestDoubleMove)
+	if sysArg == "player":
+		models.append(playerMakeMove)
+	if sysArg not in ["high", "low", "double", "player"]:
+		print "Load model from file here."
+	if len(models) == 2:
+		break
+	
+if len(models) < 2:
+	print "Not enough models selected"
+	exit(0)
+	
 dominos = shuffleDominos()
 #dominos = [(3, 3), (1, 0), (5, 4), (6, 6), (1, 1), (5, 0), (5, 3), (5, 2), (4, 0), (3, 2), (2, 2), (4, 3), (4, 1), (3, 1), (6, 1), (4, 2), (5, 1), (5, 5), (2, 0), (6, 5), (6, 2), (6, 4), (4, 4), (6, 0), (0, 0), (3, 0), (6, 3), (2, 1)]
-
 
 print "Dominoes = " + `dominos`
 players = [(0, []), (0, [])]
 
 board = []
-
 aWinnerIsFound = False
 isFirstHand = True
 
@@ -238,6 +296,7 @@ while not aWinnerIsFound: #play game
 	
 	dominos = shuffleDominos()
 	players = [(players[0][0], []), (players[1][0], [])]
+	#models = [highestPipMove, highestDoubleMove]
 	
 	#deal the dominoes
 	while not hasDouble(players[0]) and not hasDouble(players[1]):
@@ -268,7 +327,7 @@ while not aWinnerIsFound: #play game
 		isDomino = False
 		isLocked = False
 		
-		prevPass = makeMove(players[turnIndex], board, isFirstHand, playerMakeMove, len(players[1 - turnIndex][1]))
+		prevPass = makeMove(players[turnIndex], board, isFirstHand, models[turnIndex], len(players[1 - turnIndex][1]))
 		isFirstHand = False
 		while not isDomino and not isLocked:
 			
@@ -276,7 +335,7 @@ while not aWinnerIsFound: #play game
 			for player in players:
 				print `player` + "   " + `countPips(player)`
 			turnIndex = 1 - turnIndex
-			curPass = makeMove(players[turnIndex], board, False, playerMakeMove, len(players[1 - turnIndex][1]))
+			curPass = makeMove(players[turnIndex], board, False, models[turnIndex], len(players[1 - turnIndex][1]))
 			if prevPass and curPass:
 				isLocked = True
 				print "Locked"
@@ -290,14 +349,20 @@ while not aWinnerIsFound: #play game
 	player0pips = countPips(players[0])		
 	player1pips = countPips(players[1])
 	if player0pips < player1pips:
+		#player1 has more pips, so player0 scores
 		(p, c) = players[0]
 		players[0] = (p + player1pips - player0pips, c)
+		print "The first player is awarded " + `player1pips - player0pips` + " points for a total of " + `p + player1pips - player0pips`
 		if p + player1pips - player0pips >= gamePoint:
+			print "The first player has won"
 			aWinnerIsFound = True
 	else:
+		#player0 has more pips, so player1 scores
 		(p, c) = players[1]
 		players[1] = (p + player0pips - player1pips, c)
+		print "The second player is awarded " + `player0pips - player1pips` + " points for a total of " + `p + player0pips - player1pips`
 		if p + player0pips - player1pips >= gamePoint:
+			print "The second player has won"
 			aWinnerIsFound = True
 	
 	print "----------------"
